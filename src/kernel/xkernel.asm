@@ -337,73 +337,39 @@ scancode_map:
 global xk_readline
 xk_readline:
     push rbx
-    push rdx
     push rdi
-    push rcx
+    mov rbx, rdi            ; RDI trae el buffer donde guardar el texto
 
-    xor  rdx, rdx            ; longitud actual
+.read_loop:
+    call keyboard_read_char ; Llama a la rutina completa con mapa ASCII
 
-.rd:
-    in   al, 0x64
-    test al, 1
-    jz   .rd
-    in   al, 0x60
+    cmp al, 13              ; ¿Enter?
+    je .done
 
-    cmp  al, 0x80             ; key-up, ignorar
-    jge  .rd
+    cmp al, 8               ; ¿Backspace?
+    je .read_loop
 
-    push rbx
-    lea  rbx, [rel scancode_map]
-    movzx rax, al
-    mov  al, [rbx + rax]
-    pop  rbx
+    ; 1. Guardar carácter en el buffer
+    mov [rbx], al
+    inc rbx
 
-    test al, al
-    jz   .rd
-
-    cmp  al, 13
-    je   .enter
-    cmp  al, 8
-    je   .bs
-
-    cmp  rdx, rcx
-    jge  .rd
-    mov  [rdi], al
-    inc  rdi
-    inc  rdx
-    mov  bl, 0x0F
-    call xk_putchar
-    jmp  .rd
-
-.bs:
-    test rdx, rdx
-    jz   .rd
-    dec  rdi
-    dec  rdx
+    ; 2. Echo en pantalla usando tu xk_print
     push rax
-    mov  al, 8
-    mov  bl, 0x07
-    call xk_putchar
-    mov  al, ' '
-    call xk_putchar
-    mov  al, 8
-    call xk_putchar
-    pop  rax
-    jmp  .rd
+    sub rsp, 8              ; Crear espacio en stack para string temporal
+    mov [rsp], al
+    mov byte [rsp+1], 0     ; Terminar string con nulo (0)
+    mov rsi, rsp
+    mov bl, 0x0F            ; Color blanco
+    call xk_print
+    add rsp, 8
+    pop rax
 
-.enter:
-    mov  byte [rdi], 0
-    mov  rax, rdx
-    push rax
-    mov  al, 10
-    mov  bl, 0x07
-    call xk_putchar
-    pop  rax
+    jmp .read_loop
 
-    pop  rcx
-    pop  rdi
-    pop  rdx
-    pop  rbx
+.done:
+    mov byte [rbx], 0       ; Finalizar string
+    pop rdi
+    pop rbx
     ret
 
 ; =============================================================================
@@ -477,3 +443,5 @@ xk_strncpy:
 %include "src/drivers/exfs.asm"
 %include "src/init/exit.asm"
 %include "src/apps/xsh.asm"
+%include "src/kernel/keyboard.asm"
+extern keyboard_read_char

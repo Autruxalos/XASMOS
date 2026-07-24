@@ -480,3 +480,4 @@ xsh_cmd_halt:
     cli
     hlt
     jmp $
+
