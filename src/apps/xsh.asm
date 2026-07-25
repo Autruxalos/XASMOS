@@ -37,7 +37,105 @@ msg_xsh_ver:
     db 'Sin POSIX. Sin UNIX. Sin GNU.', 13, 10
     db 'Comandos: ver clear list make-dir make-file del read write cd pwd halt sprusr exofetch', 13, 10, 0
 
-msg_unknown_cmd:  db 'XSH: comando no reconocido. Escribe "ver" para ayuda.', 13, 10, 0
+msg_unknown_cmd:  db 'XSH: comando no reconocido. Escribe "ver" pa; =============================================================================
+; Teclado PS/2 embebido en XSH (sin archivo externo)
+; Funciona en 64-bit (y también en 32-bit)
+; =============================================================================
+
+; Mapa scancode set 1 → ASCII (solo las teclas básicas)
+xsh_scancode_map:
+    db 0,0,'1','2','3','4','5','6','7','8','9','0','-','=',8,9
+    db 'q','w','e','r','t','y','u','i','o','p','[',']',13,0
+    db 'a','s','d','f','g','h','j','k','l',';',"','`',0,'\'
+    db 'z','x','c','v','b','n','m',',','.','/',0,0,0,' '
+    times (128 - ($ - xsh_scancode_map)) db 0
+
+; ---------------------------------------------------------------------------
+; xsh_read_line — lee una línea completa del teclado
+; ---------------------------------------------------------------------------
+xsh_read_line:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+
+    lea  rdi, [rel xsh_linebuf]   ; destino
+    xor  rbx, rbx                 ; contador de caracteres
+
+.wait_key:
+    ; Esperar a que haya dato en el buffer del teclado
+    in   al, 0x64
+    test al, 1                    ; bit 0 = Output Buffer Full
+    jz   .wait_key
+
+    in   al, 0x60                 ; leer scancode
+
+    ; Ignorar key-up (bit 7 = 1)
+    test al, 0x80
+    jnz  .wait_key
+
+    ; Traducir scancode → ASCII
+    movzx rcx, al
+    cmp  rcx, 128
+    jge  .wait_key
+    lea  rsi, [rel xsh_scancode_map]
+    mov  al, [rsi + rcx]
+    test al, al
+    jz   .wait_key                ; tecla sin mapeo
+
+    ; --- Enter ---
+    cmp  al, 13
+    je   .enter
+
+    ; --- Backspace ---
+    cmp  al, 8
+    je   .backspace
+
+    ; --- Carácter normal ---
+    cmp  rbx, XSH_BUF_LEN - 1
+    jge  .wait_key                ; buffer lleno
+
+    mov  [rdi + rbx], al
+    inc  rbx
+
+    ; Eco en pantalla (usa xk_putchar del kernel)
+    mov  bl, 0x0F                 ; color blanco
+    call xk_putchar
+    jmp  .wait_key
+
+.backspace:
+    test rbx, rbx
+    jz   .wait_key
+    dec  rbx
+    mov  byte [rdi + rbx], 0
+
+    ; Borrar en pantalla: backspace + espacio + backspace
+    mov  al, 8
+    mov  bl, 0x07
+    call xk_putchar
+    mov  al, ' '
+    call xk_putchar
+    mov  al, 8
+    call xk_putchar
+    jmp  .wait_key
+
+.enter:
+    mov  byte [rdi + rbx], 0      ; null-terminator
+
+    ; Nueva línea en pantalla
+    mov  al, 10
+    mov  bl, 0x07
+    call xk_putchar
+
+    pop  rdi
+    pop  rsi
+    pop  rdx
+    pop  rcx
+    pop  rbx
+    pop  rax
+    retra ayuda.', 13, 10, 0
 msg_missing_arg:  db 'XSH: falta argumento.', 13, 10, 0
 msg_err_exists:   db 'XSH: ya existe.', 13, 10, 0
 msg_err_notfound: db 'XSH: no encontrado.', 13, 10, 0
@@ -122,68 +220,106 @@ xsh_main:
     jmp .loop
 
 ; =============================================================================
-; Lectura de línea (BIOS INT 0x16)
+; Lectura de línea
 ; =============================================================================
+; =============================================================================
+; Teclado PS/2 embebido en XSH (sin archivo externo)
+; Funciona en 64-bit (y también en 32-bit)
+; =============================================================================
+
+; Mapa scancode set 1 → ASCII (solo las teclas básicas)
+xsh_scancode_map:
+    db 0,0,'1','2','3','4','5','6','7','8','9','0','-','=',8,9
+    db 'q','w','e','r','t','y','u','i','o','p','[',']',13,0
+    db 'a','s','d','f','g','h','j','k','l',';',"','`',0,'\'
+    db 'z','x','c','v','b','n','m',',','.','/',0,0,0,' '
+    times (128 - ($ - xsh_scancode_map)) db 0
+
+; ---------------------------------------------------------------------------
+; xsh_read_line — lee una línea completa del teclado
+; ---------------------------------------------------------------------------
 xsh_read_line:
-    push ax
-    push bx
-    push si
-    mov  si, xsh_linebuf
-    xor  bx, bx
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
 
-.read:
-    xor  ah, ah
-    int  0x16
+    lea  rdi, [rel xsh_linebuf]   ; destino
+    xor  rbx, rbx                 ; contador de caracteres
 
-    cmp  al, 13                 ; Enter
-    je   .done
-    cmp  al, 8                  ; Backspace
-    je   .bs
-    cmp  al, 27                 ; ESC
-    je   .clear
+.wait_key:
+    ; Esperar a que haya dato en el buffer del teclado
+    in   al, 0x64
+    test al, 1                    ; bit 0 = Output Buffer Full
+    jz   .wait_key
 
-    cmp  bx, XSH_BUF_LEN-1
-    jge  .read
+    in   al, 0x60                 ; leer scancode
 
-    ; Aquí va el carácter normal (NO debe haber ninguna etiqueta print16)
-    mov  [si], al
-    inc  si
-    inc  bx
+    ; Ignorar key-up (bit 7 = 1)
+    test al, 0x80
+    jnz  .wait_key
 
-    mov  ah, 0x0E
-    mov  bh, 0
-    int  0x10
-    jmp  .read
+    ; Traducir scancode → ASCII
+    movzx rcx, al
+    cmp  rcx, 128
+    jge  .wait_key
+    lea  rsi, [rel xsh_scancode_map]
+    mov  al, [rsi + rcx]
+    test al, al
+    jz   .wait_key                ; tecla sin mapeo
 
-.bs:
-    test bx, bx
-    jz   .read
-    dec  si
-    dec  bx
-    mov  byte [si], 0
-    mov  ah, 0x0E
+    ; --- Enter ---
+    cmp  al, 13
+    je   .enter
+
+    ; --- Backspace ---
+    cmp  al, 8
+    je   .backspace
+
+    ; --- Carácter normal ---
+    cmp  rbx, XSH_BUF_LEN - 1
+    jge  .wait_key                ; buffer lleno
+
+    mov  [rdi + rbx], al
+    inc  rbx
+
+    ; Eco en pantalla (usa xk_putchar del kernel)
+    mov  bl, 0x0F                 ; color blanco
+    call xk_putchar
+    jmp  .wait_key
+
+.backspace:
+    test rbx, rbx
+    jz   .wait_key
+    dec  rbx
+    mov  byte [rdi + rbx], 0
+
+    ; Borrar en pantalla: backspace + espacio + backspace
     mov  al, 8
-    int  0x10
+    mov  bl, 0x07
+    call xk_putchar
     mov  al, ' '
-    int  0x10
+    call xk_putchar
     mov  al, 8
-    int  0x10
-    jmp  .read
+    call xk_putchar
+    jmp  .wait_key
 
-.clear:
-    mov  byte [xsh_linebuf], 0
-    jmp  .done
+.enter:
+    mov  byte [rdi + rbx], 0      ; null-terminator
 
-.done:
-    mov  byte [si], 0
-    mov  ah, 0x0E
-    mov  al, 13
-    int  0x10
+    ; Nueva línea en pantalla
     mov  al, 10
-    int  0x10
-    pop  si
-    pop  bx
-    pop  ax
+    mov  bl, 0x07
+    call xk_putchar
+
+    pop  rdi
+    pop  rsi
+    pop  rdx
+    pop  rcx
+    pop  rbx
+    pop  rax
     ret
 
 ; =============================================================================
@@ -260,6 +396,7 @@ xsh_parse_args:
 
 ; =============================================================================
 ; Dispatcher
+; ================================================================
 ; =============================================================================
 xsh_dispatch:
     push ax
