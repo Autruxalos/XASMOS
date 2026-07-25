@@ -1,5 +1,5 @@
 # =============================================================================
-# MAKEFILE - XOS EXOKERNEL OPERATING SYSTEM
+# MAKEFILE - XASMOS EXOKERNEL OPERATING SYSTEM
 # =============================================================================
 # IMPORTANTE — arquitectura de build:
 #   src/kernel/xkernel.asm es el UNICO archivo que se ensambla como kernel.
@@ -87,7 +87,7 @@ run: $(IMAGE)
 
 # --- Ejecutar en modo texto (sin SDL, util en servidores/SSH) ---
 run-nographic: $(IMAGE)
-	@echo "[QEMU] Iniciando XOS (modo serial/consola)..."
+	@echo "[QEMU] Iniciando XASMOS (modo serial/consola)..."
 	$(QEMU) -drive format=raw,file=$(IMAGE),if=ide,media=disk $(QEMUFLAGS) -display curses
 
 # --- Debug: monitor de QEMU + log de interrupciones/resets ---
