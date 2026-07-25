@@ -336,10 +336,86 @@ scancode_map:
 
 global xk_readline
 xk_readline:
+; xk_readline — teclado PS/2 embebido (sin keyboard.asm)
+; Entrada: RDI = buffer, RCX = max chars
+; Salida:  RAX = longitud; buffer null-terminated
+global xk_readline
+xk_readline:
     push rbx
+    push rcx
+    push rsi
     push rdi
-    mov rbx, rdi            ; RDI trae el buffer donde guardar el texto
 
+    mov  rbx, rdi              ; puntero de escritura
+    xor  rdx, rdx              ; contador de caracteres
+
+.wait:
+    in   al, 0x64
+    test al, 1
+    jz   .wait
+
+    in   al, 0x60
+    test al, 0x80              ; ignorar key-up
+    jnz  .wait
+
+    ; Traducir scancode con el mapa que ya tienes arriba
+    movzx rsi, al
+    cmp  rsi, 128
+    jge  .wait
+    lea  rdi, [rel scancode_map]
+    mov  al, [rdi + rsi]
+    test al, al
+    jz   .wait
+
+    cmp  al, 13                ; Enter
+    je   .enter
+
+    cmp  al, 8                 ; Backspace
+    je   .backspace
+
+    cmp  rdx, rcx
+    jge  .wait                 ; buffer lleno
+
+    mov  [rbx], al
+    inc  rbx
+    inc  rdx
+
+    ; Eco
+    push rax
+    mov  bl, 0x0F
+    call xk_putchar
+    pop  rax
+    jmp  .wait
+
+.backspace:
+    test rdx, rdx
+    jz   .wait
+    dec  rbx
+    dec  rdx
+    mov  byte [rbx], 0
+
+    mov  al, 8
+    mov  bl, 0x07
+    call xk_putchar
+    mov  al, ' '
+    call xk_putchar
+    mov  al, 8
+    call xk_putchar
+    jmp  .wait
+
+.enter:
+    mov  byte [rbx], 0
+    mov  rax, rdx              ; devolver longitud
+
+    mov  al, 10
+    mov  bl, 0x07
+    call xk_putchar
+
+    pop  rdi
+    pop  rsi
+    pop  rcx
+    pop  rbx
+    ret
 .read_loop:
     call keyboard_read_char ; Llama a la rutina completa con mapa ASCII
 
