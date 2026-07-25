@@ -139,22 +139,13 @@ xsh_read_line:
     je   .done
     cmp  al, 8                  ; Backspace
     je   .bs
-    cmp  al, 27                 ; ESC → limpiar
+    cmp  al, 27                 ; ESC
     je   .clear
 
     cmp  bx, XSH_BUF_LEN-1
     jge  .read
-print16:
-    mov  ah, 0x0E
-    mov  bh, 0
-.lp:
-    lodsb
-    or   al, al
-    jz   .done
-    int  0x10
-    jmp  .lp
-.done:
-    ret
+
+    ; Aquí va el carácter normal (NO debe haber ninguna etiqueta print16)
     mov  [si], al
     inc  si
     inc  bx
