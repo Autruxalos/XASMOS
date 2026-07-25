@@ -6,7 +6,6 @@
 ; Comandos: ver clear list make-dir make-file del read write cd pwd halt
 ; =============================================================================
 [BITS 16]
-[BITS 64]
 
 ; En la rutina xsh_leer_linea, separaremos la primera palabra (comando)
 ; del resto del texto (argumentos)
