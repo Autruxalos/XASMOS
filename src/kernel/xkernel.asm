@@ -2,16 +2,13 @@
 ; XKERNEL — XOS Exokernel [XSPEC-0004]
 ; Arquitectura: x86-64, cargado por XBOOT propio (NO GRUB/Multiboot2)
 ; Cadena de arranque: XBOOT (0x7C00) -> XKERNEL (0x9000, 16-bit)
+;                   16-bit -> 32-bit -> 64-bit -> EXIT -> XSH
 ;                     -> 32-bit -> 64-bit -> EXIT -> XSH
 ; =============================================================================
 [BITS 16]
 org 0x9000
 
 kernel_16_entry:
-    mov ah, 0x0E
-    mov al, 'X'
-    mov bx, 0x0007
-    int 0x10
     cli
     xor ax, ax
     mov ds, ax
@@ -337,45 +334,50 @@ scancode_map:
 global xk_readline
 xk_readline:
     push rbx
-    push rcx
-    push rsi
+    push rdx
     push rdi
-    mov  rbx, rdi
-    xor  rdx, rdx
-.wait:
+    push rcx
+
+    xor  rdx, rdx            ; longitud actual
+
+.rd:
     in   al, 0x64
     test al, 1
-    jz   .wait
+    jz   .rd
     in   al, 0x60
-    test al, 0x80
-    jnz  .wait
-    movzx rsi, al
-    cmp  rsi, 128
-    jge  .wait
-    lea  rdi, [rel scancode_map]
-    mov  al, [rdi + rsi]
+
+    cmp  al, 0x80             ; key-up, ignorar
+    jge  .rd
+
+    push rbx
+    lea  rbx, [rel scancode_map]
+    movzx rax, al
+    mov  al, [rbx + rax]
+    pop  rbx
+
     test al, al
-    jz   .wait
+    jz   .rd
+
     cmp  al, 13
     je   .enter
     cmp  al, 8
-    je   .backspace
+    je   .bs
+
     cmp  rdx, rcx
-    jge  .wait
-    mov  [rbx], al
-    inc  rbx
+    jge  .rd
+    mov  [rdi], al
+    inc  rdi
     inc  rdx
-    push rax
     mov  bl, 0x0F
     call xk_putchar
-    pop  rax
-    jmp  .wait
-.backspace:
+    jmp  .rd
+
+.bs:
     test rdx, rdx
-    jz   .wait
-    dec  rbx
+    jz   .rd
+    dec  rdi
     dec  rdx
-    mov  byte [rbx], 0
+    push rax
     mov  al, 8
     mov  bl, 0x07
     call xk_putchar
@@ -383,48 +385,22 @@ xk_readline:
     call xk_putchar
     mov  al, 8
     call xk_putchar
-    jmp  .wait
+    pop  rax
+    jmp  .rd
+
 .enter:
-    mov  byte [rbx], 0
+    mov  byte [rdi], 0
     mov  rax, rdx
+    push rax
     mov  al, 10
     mov  bl, 0x07
     call xk_putchar
-    pop  rdi
-    pop  rsi
+    pop  rax
+
     pop  rcx
+    pop  rdi
+    pop  rdx
     pop  rbx
-    ret
-.read_loop:
-    call keyboard_read_char ; Llama a la rutina completa con mapa ASCII
-
-    cmp al, 13              ; ¿Enter?
-    je .done
-
-    cmp al, 8               ; ¿Backspace?
-    je .read_loop
-
-    ; 1. Guardar carácter en el buffer
-    mov [rbx], al
-    inc rbx
-
-    ; 2. Echo en pantalla usando tu xk_print
-    push rax
-    sub rsp, 8              ; Crear espacio en stack para string temporal
-    mov [rsp], al
-    mov byte [rsp+1], 0     ; Terminar string con nulo (0)
-    mov rsi, rsp
-    mov bl, 0x0F            ; Color blanco
-    call xk_print
-    add rsp, 8
-    pop rax
-
-    jmp .read_loop
-
-.done:
-    mov byte [rbx], 0       ; Finalizar string
-    pop rdi
-    pop rbx
     ret
 
 ; =============================================================================
