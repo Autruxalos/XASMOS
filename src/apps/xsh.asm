@@ -309,7 +309,7 @@ xsh_cmd_ver:
 xsh_cmd_clear:
     mov  ax, 0x0003
     int  0x10
-    ret
+    ret; Antes: 
 
 xsh_cmd_list:
     ; call exfs_list_dir (versión 16-bit)
@@ -428,7 +428,7 @@ xsh_cmd_exofetch:
 ; =============================================================================
 ; Utilidades 16-bit
 ; =============================================================================
-print16:
+xsh_print16:
     mov  ah, 0x0E
     mov  bh, 0
 .lp:
