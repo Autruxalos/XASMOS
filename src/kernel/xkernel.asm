@@ -443,5 +443,3 @@ xk_strncpy:
 %include "src/drivers/exfs.asm"
 %include "src/init/exit.asm"
 %include "src/apps/xsh.asm"
-%include "src/kernel/keyboard.asm"
-extern keyboard_read_char
