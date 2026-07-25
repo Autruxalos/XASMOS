@@ -105,7 +105,7 @@ xsh_main:
 .root_prompt:
     mov si, msg_prompt_root
 .show_prompt:
-    call print16
+    call xsh_print16
 
     ; Leer línea
     call xsh_read_line
@@ -144,7 +144,17 @@ xsh_read_line:
 
     cmp  bx, XSH_BUF_LEN-1
     jge  .read
-
+print16:
+    mov  ah, 0x0E
+    mov  bh, 0
+.lp:
+    lodsb
+    or   al, al
+    jz   .done
+    int  0x10
+    jmp  .lp
+.done:
+    ret
     mov  [si], al
     inc  si
     inc  bx
@@ -289,7 +299,7 @@ xsh_dispatch:
 
 .unknown:
     mov  si, msg_unknown_cmd
-    call print16
+    call xsh_print16
 
 .done:
     pop  di
@@ -303,7 +313,7 @@ xsh_dispatch:
 ; =============================================================================
 xsh_cmd_ver:
     mov  si, msg_xsh_ver
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_clear:
@@ -322,11 +332,11 @@ xsh_cmd_make_dir:
     ; mov bl, XOBJ_DIR
     ; call exfs_make_obj
     mov  si, msg_created
-    call print16
+    call xsh_print16
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_make_file:
@@ -336,11 +346,11 @@ xsh_cmd_make_file:
     ; mov bl, XOBJ_DOCUMENT
     ; call exfs_make_obj
     mov  si, msg_created
-    call print16
+    call xsh_print16
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_del:
@@ -349,11 +359,11 @@ xsh_cmd_del:
     ARG 1
     ; call exfs_delete_obj
     mov  si, msg_deleted
-    call print16
+    call xsh_print16
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_read:
@@ -361,14 +371,14 @@ xsh_cmd_read:
     jl   .noarg
     ARG 1
     mov  si, msg_read_start
-    call print16
+    call xsh_print16
     ; call exfs_read_obj_data
     mov  si, msg_read_end
-    call print16
+    call xsh_print16
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_write:
@@ -376,11 +386,11 @@ xsh_cmd_write:
     jl   .noarg
     ; construir texto y llamar a exfs_write_obj_data
     mov  si, msg_write_done
-    call print16
+    call xsh_print16
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_cd:
@@ -391,16 +401,16 @@ xsh_cmd_cd:
     ret
 .noarg:
     mov  si, msg_missing_arg
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_pwd:
     mov  si, msg_prompt_l
-    call print16
+    call xsh_print16
     mov  si, xsh_cwd_name
-    call print16
+    call xsh_print16
     mov  si, msg_prompt_l
-    call print16
+    call xsh_print16
     mov  ah, 0x0E
     mov  al, 13
     int  0x10
@@ -410,7 +420,7 @@ xsh_cmd_pwd:
 
 xsh_cmd_halt:
     mov  si, msg_halt_msg
-    call print16
+    call xsh_print16
     cli
     hlt
     jmp  $
@@ -418,7 +428,7 @@ xsh_cmd_halt:
 xsh_cmd_sprusr:
     mov  byte [xsh_is_sprusr], 1
     mov  si, msg_sprusr_ok
-    call print16
+    call xsh_print16
     ret
 
 xsh_cmd_exofetch:
