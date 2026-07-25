@@ -1,14 +1,14 @@
-XOS - Native Exokernel Operating System
+# XASMOS - Native Exokernel Operating System
 
-XOS is an experimental high-performance exokernel operating system written entirely from scratch in 16-bit x86 Assembly. This master repository brings together all of the ecosystem's independent modules into a single project.
+XASMOS is an experimental high-performance exokernel operating system written entirely from scratch in 16-bit x86 Assembly. This master repository brings together all of the ecosystem's independent modules into a single project.
 
 📐 Path Specification: SuperDirs (|)
 
-XOS completely rejects the legacy UNIX (/) and DOS (\) path standards. Instead, the EXFS file system introduces the SuperDir concept, using the vertical bar | as a unified path delimiter.
+XASMOS completely rejects the legacy UNIX (/) and DOS (\) path standards. Instead, the EXFS file system introduces the SuperDir concept, using the vertical bar | as a unified path delimiter.
 
 System Syntax Rules
-Linear Structure: Paths follow the format |directory|file.
-Direct Mapping: When typing |system|xsh, the kernel does not traverse a hierarchical directory tree on disk. Instead, it directly looks up the indexed token |system| in the global XOBJ object table. This reduces lookup time to constant-time complexity, $\mathcal{O}(1)$.
+Linear Structure: Paths follow the format |directory|file.asm
+Direct Mapping: When typing |apps|xsh, the kernel does not traverse a hierarchical directory tree on disk. Instead, it directly looks up the indexed token |system| in the global XOBJ object table. This reduces lookup time to constant-time complexity, $\mathcal{O}(1)$.
 POSIX Independence: Eliminates the logical overhead of traditional file descriptors and complex operating system system calls.
 🗂️ Ecosystem Architecture
 
