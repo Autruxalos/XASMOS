@@ -1,7 +1,7 @@
 ; =============================================================================
-; XBOOT - Bootloader XOS  [XSPEC-0001]
-; Carga XKERNEL (bin/xkernel.bin) desde el sector 1 del disco a 0x0000:0x9000
-; Usa INT 13h LBA extendido (AH=42h), con fallback a CHS de 63 sectores.
+; XBOOT - Bootloader XASMOS  [XSPEC-0001]
+; Load XKERNEL (bin/xkernel.bin) from sector 1 from drive to 0x0000:0x9000
+; Uses INT 13h LBA extended (AH=42h), with fallback to CHS of 63 sectors.
 ; =============================================================================
 [BITS 16]
 [ORG 0x7C00]
