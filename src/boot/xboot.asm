@@ -148,11 +148,11 @@ print_hex_byte:
     ret
 
 BOOT_DRIVE  db 0
-MSG_LOADING db 'XOS Boot - Cargando...', 13, 10, 0
-MSG_LBA     db 'Modo LBA', 13, 10, 0
-MSG_CHS     db 'Modo CHS', 13, 10, 0
-MSG_OK      db 'Kernel cargado! Saltando...', 13, 10, 0
-MSG_ERROR   db 'ERROR lectura disco! Codigo: ', 0
+MSG_LOADING db 'XASMOS Boot - Loading...', 13, 10, 0
+MSG_LBA     db 'LBA Mode', 13, 10, 0
+MSG_CHS     db 'CHS Mode', 13, 10, 0
+MSG_OK      db 'Kernel loaded! skipping...', 13, 10, 0
+MSG_ERROR   db 'ERROR reading disk! Code: ', 0
 MSG_DEBUG_LBA_OK db 'K', 0
 
 times 510 - ($ - $$) db 0
