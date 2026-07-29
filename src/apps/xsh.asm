@@ -309,7 +309,7 @@ xsh_read_line:
     pop  rax
     ret
 
-; --- Parser / Dispatcher / Comandos (64-bit) ---
+; --- Parser / Dispatcher / Commands (64-bit) ---
 xsh_parse_args:
     mov  qword [xsh_argc], 0
     xor  rbx, rbx
