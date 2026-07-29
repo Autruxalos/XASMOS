@@ -1,9 +1,9 @@
 ; =============================================================================
-; XSH — Exokernel Shell [XSPEC-0006] Multi-modo
-; Entradas:
-;   xsh_main_16  → Real Mode (16-bit)  — BIOS teclado
+; XSH — Exokernel Shell [XSPEC-0006] Multi-mode
+; Entrances:
+;   xsh_main_16  → Real Mode (16-bit)  — BIOS keyboard
 ;   xsh_main_32  → Protected Mode      — PS/2
-;   xsh_main     → Long Mode (64-bit)  — PS/2 (entrada principal actual)
+;   xsh_main     → Long Mode (64-bit)  — PS/2 (actual main entrance)
 ; =============================================================================
 
 ; #############################################################################
@@ -155,7 +155,7 @@ strcmp16:
 
 ; #############################################################################
 ; ============================  SECCIÓN 64-BIT  ===============================
-; (entrada principal actual del kernel)
+; (main entrance for kernel)
 ; #############################################################################
 [BITS 64]
 
